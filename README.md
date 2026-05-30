@@ -353,7 +353,7 @@ pip install -e .
 
 ```bash
 # Scan text directly
-sloplens scan "Moving forward we will leverage synergies"
+sloplens scan "Going ahead we will leverage synergies"
 
 # Scan a file
 sloplens scan --file README.md
@@ -420,12 +420,12 @@ On every `git commit`, the hook:
 
 ```
 🔍 SlopLens pre-commit check
-   82 ±6  README.md  [moving forward, cutting-edge]
+   82 ±6  README.md  [going ahead, advanced]
    23 ±12 CHANGELOG.md
 
 ✗ BLOCKED — 1 file(s) exceed slop threshold (70)
   README.md: score 82
-    Remove: moving forward, cutting-edge
+    Remove: going ahead, advanced
 
 Fix slop or: SLOPLENS_THRESHOLD=80 git commit ...
 ```
@@ -500,8 +500,8 @@ Full 3-layer hybrid scan.
   "slop_category": "corporate_buzzwords",
   "verdict": "Pure jargon dressed as strategy.",
   "roast": "This paragraph used 80 words to say absolutely nothing specific.",
-  "flagged_phrases": ["moving forward", "best-in-class", "circle back"],
-  "fix": "Replace 'moving forward' with the specific action and date.",
+  "flagged_phrases": ["going ahead", "high-quality", "circle back"],
+  "fix": "Replace 'going ahead' with the specific action and date.",
   "reading_time_min": 2.1,
   "info_time_min": 0.4,
   "fluff_percent": 79,

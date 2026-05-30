@@ -27,10 +27,10 @@ Staged `.md`, `.txt`, `.rst` files only. Pure Python, no dependencies, no API ke
 
 ```
 🔍 SlopLens pre-commit check
-   82 ±8  README.md  [moving forward, cutting-edge]
+   82 ±8  README.md  [going ahead, advanced]
    34 ±12 CHANGELOG.md
 
 ✗ BLOCKED — 1 file(s) exceed slop threshold (70)
   README.md: score 82
-    Remove: moving forward, cutting-edge
+    Remove: going ahead, advanced
 ```
