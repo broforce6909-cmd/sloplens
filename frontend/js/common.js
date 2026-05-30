@@ -1,23 +1,49 @@
 // ── SlopLens Common JS ────────────────────────────────────────────────────────
 
-let backendUrl = localStorage.getItem("sloplens_backend") || "";
+// Auto-detect backend URL based on current page location
+function autoDetectBackend() {
+  const host = window.location.hostname;
+  const port = window.location.port;
+  
+  // If running on Render (production)
+  if (host.includes("onrender.com") || host.includes("sloplens")) {
+    return window.location.origin;
+  }
+  // If running locally on port 8000 (served by FastAPI)
+  if (port === "8000") {
+    return window.location.origin;
+  }
+  // If running on localhost with different port (Live Server etc.)
+  if (host === "localhost" || host === "127.0.0.1") {
+    return "http://localhost:8000";
+  }
+  // Use saved URL or empty
+  return localStorage.getItem("sloplens_backend") || "";
+}
+
+let backendUrl = autoDetectBackend();
 
 // ── Backend bar ───────────────────────────────────────────────────────────────
 
 function initBackendBar() {
   const input = document.getElementById("bbInput");
   if (!input) return;
-  if (backendUrl) input.value = backendUrl;
-
-  // Auto-detect: if served from FastAPI on port 8000
-  if (window.location.port === "8000") {
-    backendUrl = window.location.origin;
-    localStorage.setItem("sloplens_backend", backendUrl);
+  
+  // Auto-detect and set
+  backendUrl = autoDetectBackend();
+  if (backendUrl) {
     input.value = backendUrl;
+    localStorage.setItem("sloplens_backend", backendUrl);
     updateBackendStatus("connected", "✓ Auto-connected");
-    return;
+    // Silent health check
+    fetch(backendUrl + "/health").then(r => r.json()).then(d => {
+      updateBackendStatus("connected", "✓ " + d.service + " v" + d.version);
+    }).catch(() => {
+      updateBackendStatus("off", "Not connected");
+    });
+  } else {
+    updateBackendStatus("off", "Not connected");
   }
-  updateBackendStatus(backendUrl ? "connected" : "off", backendUrl ? "✓ Backend set" : "Not connected");
 }
 
 function setBackend() {
