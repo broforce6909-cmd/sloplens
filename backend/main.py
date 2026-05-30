@@ -230,7 +230,7 @@ def semantic_score(text: str, use_embeddings: bool = True) -> dict:
             slop_sim  = float(np.dot(emb, _st_slop_centroid)  / (np.linalg.norm(emb) * np.linalg.norm(_st_slop_centroid)  + 1e-9))
             clean_sim = float(np.dot(emb, _st_clean_centroid) / (np.linalg.norm(emb) * np.linalg.norm(_st_clean_centroid) + 1e-9))
             total = slop_sim + clean_sim
-            score = int((slop_sim / total) * 100) if total > 0.001 else 50
+            score = max(0, min(100, int((slop_sim / total) * 100))) if total > 0.001 else 50
             return {
                 "semantic_slop_score": score,
                 "slop_similarity":     round(slop_sim,  4),
@@ -245,7 +245,7 @@ def semantic_score(text: str, use_embeddings: bool = True) -> dict:
     slop_sim  = float(cosine_similarity(vec, _tfidf_slop_centroid)[0][0])
     clean_sim = float(cosine_similarity(vec, _tfidf_clean_centroid)[0][0])
     total = slop_sim + clean_sim
-    score = int((slop_sim / total) * 100) if total > 0.001 else 50
+    score = max(0, min(100, int((slop_sim / total) * 100))) if total > 0.001 else 50
     return {
         "semantic_slop_score": score,
         "slop_similarity":     round(slop_sim,  4),
