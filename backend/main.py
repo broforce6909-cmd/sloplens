@@ -14,7 +14,6 @@ import json, re, math, hashlib, os, asyncio
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-from sentence_transformers import SentenceTransformer
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -185,29 +184,7 @@ CLEAN_CORPUS = [
     "The satellite launched at 03:47 UTC and reached its target orbit 94 minutes after liftoff.",
 ]
 
-# Sentence-transformers model — loaded lazily to avoid cold-start issues
-_st_model = None
-def get_st_model():
-    global _st_model
-    if _st_model is None:
-        _st_model = SentenceTransformer("all-MiniLM-L6-v2")
-    return _st_model
-
-# Pre-compute corpus centroids at startup
-_st_slop_centroid  = None
-_st_clean_centroid = None
-
-def _init_centroids():
-    global _st_slop_centroid, _st_clean_centroid
-    if _st_slop_centroid is not None:
-        return
-    model = get_st_model()
-    slop_embs  = model.encode(SLOP_CORPUS,  convert_to_numpy=True, show_progress_bar=False)
-    clean_embs = model.encode(CLEAN_CORPUS, convert_to_numpy=True, show_progress_bar=False)
-    _st_slop_centroid  = slop_embs.mean(axis=0)
-    _st_clean_centroid = clean_embs.mean(axis=0)
-
-# Also keep TF-IDF as fast fallback
+# TF-IDF semantic layer (sentence-transformers removed for memory efficiency)
 _vec = TfidfVectorizer(ngram_range=(1, 2), min_df=1, sublinear_tf=True)
 _vec.fit(SLOP_CORPUS + CLEAN_CORPUS)
 _tfidf_slop_centroid  = np.asarray(_vec.transform(SLOP_CORPUS).mean(axis=0))
@@ -215,32 +192,8 @@ _tfidf_clean_centroid = np.asarray(_vec.transform(CLEAN_CORPUS).mean(axis=0))
 
 
 def semantic_score(text: str, use_embeddings: bool = True) -> dict:
-    """
-    Semantic slop scoring using sentence-transformers cosine similarity.
-    Falls back to TF-IDF if embeddings unavailable.
-    """
+    """TF-IDF semantic scoring (memory-efficient for free tier deployment)."""
     text_trunc = text[:2000]
-
-    # Primary: sentence-transformers (all-MiniLM-L6-v2)
-    if use_embeddings:
-        try:
-            _init_centroids()
-            model    = get_st_model()
-            emb      = model.encode([text_trunc], convert_to_numpy=True, show_progress_bar=False)[0]
-            slop_sim  = float(np.dot(emb, _st_slop_centroid)  / (np.linalg.norm(emb) * np.linalg.norm(_st_slop_centroid)  + 1e-9))
-            clean_sim = float(np.dot(emb, _st_clean_centroid) / (np.linalg.norm(emb) * np.linalg.norm(_st_clean_centroid) + 1e-9))
-            total = slop_sim + clean_sim
-            score = max(0, min(100, int((slop_sim / total) * 100))) if total > 0.001 else 50
-            return {
-                "semantic_slop_score": score,
-                "slop_similarity":     round(slop_sim,  4),
-                "clean_similarity":    round(clean_sim, 4),
-                "semantic_method":     "sentence-transformers/all-MiniLM-L6-v2",
-            }
-        except Exception:
-            pass  # fall through to TF-IDF
-
-    # Fallback: TF-IDF
     vec       = _vec.transform([text_trunc])
     slop_sim  = float(cosine_similarity(vec, _tfidf_slop_centroid)[0][0])
     clean_sim = float(cosine_similarity(vec, _tfidf_clean_centroid)[0][0])
@@ -250,7 +203,7 @@ def semantic_score(text: str, use_embeddings: bool = True) -> dict:
         "semantic_slop_score": score,
         "slop_similarity":     round(slop_sim,  4),
         "clean_similarity":    round(clean_sim, 4),
-        "semantic_method":     "tfidf-fallback",
+        "semantic_method":     "tfidf",
     }
 
 
