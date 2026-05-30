@@ -1,0 +1,77 @@
+name: SlopLens Slop Gate
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  slop-gate:
+    name: Slop-gate PR descriptions and docs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install SlopLens CLI
+        run: pip install click rich httpx beautifulsoup4 scikit-learn numpy
+
+      - name: Heuristic slop-gate on markdown files
+        run: |
+          python3 - <<'PYEOF'
+          import sys, re, math
+
+          FILLERS = [
+              "it goes without saying","in today's world","at the end of the day",
+              "moving forward","think outside the box","cutting-edge","revolutionize",
+              "game-changer","best-in-class","going forward","low-hanging fruit",
+              "move the needle","when all is said and done","for all intents and purposes",
+          ]
+
+          import pathlib
+          failures = []
+          for f in pathlib.Path(".").rglob("*.md"):
+              if any(p in str(f) for p in ["node_modules","venv",".git"]):
+                  continue
+              text = f.read_text(errors="ignore").lower()
+              hits = [p for p in FILLERS if p in text]
+              if hits:
+                  failures.append((str(f), hits))
+
+          if failures:
+              print("SLOP GATE FAILED — filler phrases found in docs:")
+              for fname, hits in failures:
+                  print(f"  {fname}: {hits}")
+              sys.exit(1)
+          print(f"SLOP GATE PASSED — scanned {len(list(pathlib.Path('.').rglob('*.md')))} markdown files")
+          PYEOF
+
+      - name: Check PR description (on PR events)
+        if: github.event_name == 'pull_request'
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          python3 - <<'PYEOF'
+          import sys, os, re
+
+          FILLERS = [
+              "moving forward","think outside the box","cutting-edge","revolutionize",
+              "best-in-class","going forward","low-hanging fruit","move the needle",
+          ]
+
+          body  = (os.getenv("PR_BODY")  or "").lower()
+          title = (os.getenv("PR_TITLE") or "").lower()
+          text  = title + " " + body
+
+          hits = [f for f in FILLERS if f in text]
+          if hits:
+              print(f"PR slop detected: {hits}")
+              print("Tip: replace vague phrases with specific changes.")
+              sys.exit(1)
+          print("PR description looks clean.")
+          PYEOF
