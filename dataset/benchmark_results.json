@@ -1,0 +1,19 @@
+{
+  "dataset": {
+    "total": 60,
+    "slop": 30,
+    "clean": 30
+  },
+  "threshold": 20,
+  "results": {
+    "f1": 0.897,
+    "precision": 0.929,
+    "recall": 0.867,
+    "accuracy": 0.9,
+    "tp": 26,
+    "fp": 2,
+    "tn": 28,
+    "fn": 4
+  },
+  "notes": "Heuristic + TF-IDF semantic layer only. LLM layer not benchmarked (non-deterministic)."
+}

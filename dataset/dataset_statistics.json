@@ -1,0 +1,32 @@
+{
+  "total": 60,
+  "slop": 30,
+  "clean": 30,
+  "categories": {
+    "slop": [
+      "marketing_fluff",
+      "corporate_buzzwords",
+      "ai_filler",
+      "seo_stuffing",
+      "vague_commits",
+      "hedge_heavy"
+    ],
+    "clean": [
+      "engineering_commits",
+      "scientific_writing",
+      "technical_docs",
+      "journalism",
+      "benchmarks",
+      "experiments"
+    ]
+  },
+  "benchmark": {
+    "f1": 0.897,
+    "precision": 0.929,
+    "recall": 0.867,
+    "accuracy": 0.9,
+    "threshold": 20,
+    "method": "heuristic + sentence-transformers semantic layer",
+    "note": "LLM layer excluded from benchmark (non-deterministic)"
+  }
+}
