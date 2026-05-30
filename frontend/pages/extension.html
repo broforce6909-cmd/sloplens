@@ -62,10 +62,8 @@
     <h3>Step 1 — Set Backend URL</h3>
     <p>Open <code style="font-family:var(--mono);color:var(--amber)">extension/config.js</code> in your project folder and set your backend URL:</p>
     <div class="code-block">// extension/config.js
-const SLOPLENS_BACKEND = "http://localhost:8000";
-// After Railway deploy:
-// const SLOPLENS_BACKEND = "https://your-app.railway.app";</div>
-    <p style="color:var(--amber);font-size:13px">&#9888; Backend must be running first: <code style="font-family:var(--mono)">python run.py</code></p>
+const SLOPLENS_BACKEND = "https://sloplens.onrender.com";</div>
+    <p style="color:var(--amber);font-size:13px">&#9888; Backend is live at <code style="font-family:var(--mono)">https://sloplens.onrender.com</code> — no local setup needed.</p>
   </div>
 
   <div class="guide-section">
@@ -150,8 +148,8 @@ const SLOPLENS_BACKEND = "http://localhost:8000";
           <div style="font-size:13px;color:var(--ink2)">Try on Wikipedia: <code style="font-family:var(--mono);color:var(--amber)">en.wikipedia.org</code> — some sites block background changes via CSP.</div>
         </div>
         <div style="border-left:3px solid var(--green-d);padding-left:12px">
-          <div style="font-size:13px;font-weight:600;color:var(--ink);margin-bottom:4px">After Railway deploy</div>
-          <div style="font-size:13px;color:var(--ink2)">Update <code style="font-family:var(--mono);color:var(--amber)">extension/config.js</code> with Railway URL, then reload extension.</div>
+          <div style="font-size:13px;font-weight:600;color:var(--ink);margin-bottom:4px">Backend URL</div>
+          <div style="font-size:13px;color:var(--ink2)">Backend is already set to <code style="font-family:var(--mono);color:var(--amber)">https://sloplens.onrender.com</code> in config.js — no changes needed.</div>
         </div>
       </div>
     </div>
