@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Analyzer — SlopLens</title>
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="backend-bar">
+    <label for="bbInput">&#9881; Backend:</label>
+    <input id="bbInput" type="text" placeholder="http://localhost:8000" onchange="setBackend()" onblur="setBackend()">
+    <button class="bb-btn" onclick="useLocalhost()">Use localhost</button>
+    <button class="bb-btn primary" onclick="testBackend()">Connect &#9654;</button>
+    <span id="bbStatus">Not connected</span>
+  </div>
+  <nav>
+    <a href="/" class="nav-brand">SlopLens</a>
+    <div class="nav-links">
+      <a href="/pages/analyzer.html">Analyzer</a>
+      <a href="/pages/compare.html">Compare</a>
+      <a href="/pages/repo.html">Repo</a>
+      <a href="/pages/urls.html">URLs</a>
+      <a href="/pages/badge.html">Badge</a>
+      <a href="/pages/extension.html">Extension</a>
+      <a href="/pages/cli.html">CLI</a>
+      <a href="/pages/api.html">API</a>
+    </div>
+    <span class="nav-track">SLOP SCAN 2026</span>
+  </nav>
+
+<div class="page">
+  <div class="page-header">
+    <div class="page-tag">Text Analyzer</div>
+    <h2 class="page-title">Paste <em>anything.</em></h2>
+    <p class="page-sub">Heuristic mode works instantly in browser. Set backend URL above for full 3-layer LLM scoring with roast and condense.</p>
+  </div>
+
+  <div class="shell">
+    <div class="shell-bar">
+      <div style="display:flex;align-items:center;gap:6px">
+        <div class="shell-dots">
+          <div class="shell-dot" style="background:#EF4444"></div>
+          <div class="shell-dot" style="background:#F59E0B;margin-left:5px"></div>
+          <div class="shell-dot" style="background:#22C55E;margin-left:5px"></div>
+        </div>
+        <span class="shell-title">sloplens://analyze</span>
+      </div>
+      <div class="shell-actions">
+        <button class="sample-btn" onclick="loadSample(0)">Slop sample</button>
+        <button class="sample-btn" onclick="loadSample(1)">Clean sample</button>
+        <button class="sample-btn" onclick="resetAnalyzer()">Clear</button>
+      </div>
+    </div>
+
+    <div class="text-in-wrap scan-wrap">
+      <div class="scan-overlay" id="scanOverlay"><div class="scan-bg"></div><div class="scan-line"></div></div>
+      <textarea id="ta" placeholder="Paste text here — PR description, blog post, commit message, README..." style="min-height:140px"></textarea>
+      <div class="hl-view" id="hlView" onclick="returnToEdit()"></div>
+    </div>
+
+    <div class="ctrl-row">
+      <span class="char-ct" id="charCt">0 chars</span>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span id="modeBadge" style="font-family:var(--mono);font-size:10px;padding:3px 9px;border-radius:3px;background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-d);text-transform:uppercase;letter-spacing:.06em">Heuristic</span>
+        <button class="btn btn-primary" id="scanBtn" onclick="doScan()" disabled>&#9654; Scan for slop</button>
+      </div>
+    </div>
+
+    <div style="padding:0 16px"><div class="err-box" id="errBox"></div></div>
+    <div class="skeleton-pane" id="skelPane">
+      <div class="skeleton-top">
+        <div class="skeleton sk-ring"></div>
+        <div style="flex:1;padding-top:8px">
+          <div class="skeleton sk-line" style="width:100%"></div>
+          <div class="skeleton sk-bar"></div>
+          <div class="skeleton sk-line" style="width:75%"></div>
+          <div class="skeleton sk-bar"></div>
+          <div class="skeleton sk-line" style="width:100%"></div>
+          <div class="skeleton sk-bar"></div>
+          <div class="skeleton sk-line" style="width:50%"></div>
+          <div class="skeleton sk-bar"></div>
+        </div>
+      </div>
+      <div class="skeleton sk-block" style="width:100%;margin-bottom:12px"></div>
+      <div class="skeleton sk-line" style="width:70%"></div>
+    </div>
+    <div class="results" id="results"></div>
+  </div>
+</div>
+
+<footer>
+  <span class="footer-brand">SlopLens</span>
+  <span class="footer-meta">Text Analyzer</span>
+</footer>
+<script src="/js/common.js"></script>
+<script>
+const SAMPLES = [
+  "In today's rapidly evolving digital landscape, it goes without saying that leveraging cutting-edge AI solutions is paramount. Moving forward, our team will synergize cross-functional capabilities to deliver best-in-class experiences. At the end of the day, we need to think outside the box and circle back on our core competencies to move the needle.",
+  "Fixed auth middleware race condition where concurrent requests read stale tokens before write lock acquired. Reproduced under 50+ concurrent logins. Added Redis SETNX lock 200ms TTL; fallback to DB after 3 retries. Closes #1847."
+];
+let lastR = null;
+
+const ta = document.getElementById("ta");
+const charCt = document.getElementById("charCt");
+const scanBtn = document.getElementById("scanBtn");
+const scanOverlay = document.getElementById("scanOverlay");
+const hlView = document.getElementById("hlView");
+const results = document.getElementById("results");
+const errBox = document.getElementById("errBox");
+const skelPane = document.getElementById("skelPane");
+
+ta.addEventListener("input", updateCount);
+function updateCount() {
+  const n = ta.value.length;
+  charCt.textContent = n + " chars" + (n < 20 ? " — min 20" : "");
+  scanBtn.disabled = n < 20;
+}
+
+function loadSample(i) { returnToEdit(); ta.value = SAMPLES[i]; updateCount(); }
+function returnToEdit() { ta.style.display = ""; hlView.style.display = "none"; }
+function resetAnalyzer() { returnToEdit(); ta.value = ""; updateCount(); results.style.display = "none"; errBox.style.display = "none"; }
+
+async function doScan() {
+  const text = ta.value.trim();
+  if (text.length < 20) return;
+  errBox.style.display = "none";
+  results.style.display = "none";
+  skelPane.style.display = "block";
+  scanBtn.disabled = true;
+  scanOverlay.style.display = "block";
+
+  let r;
+  if (backendUrl) {
+    try {
+      r = await apiCall("scan", { text, fast: false });
+    } catch(e) {
+      errBox.textContent = "Backend failed: " + e.message + " — showing heuristic results.";
+      errBox.style.display = "block";
+      r = jsScore(text);
+    }
+  } else {
+    r = jsScore(text);
+  }
+
+  scanOverlay.style.display = "none";
+  skelPane.style.display = "none";
+  ta.style.display = "none";
+  hlView.innerHTML = buildHl(text, r.flagged_phrases);
+  hlView.style.display = "block";
+
+  results.innerHTML = buildResultHtml(r) +
+    (backendUrl ? `<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+      <button class="btn btn-green" onclick="doCondense()">Remove fluff</button>
+      <button class="btn btn-ghost" id="shareBtn" onclick="copyShareCard(lastR)">Copy share card</button>
+    </div>
+    <div id="condenseResult" style="margin-top:12px"></div>` :
+    `<div style="margin-top:10px"><button class="btn btn-ghost" id="shareBtn" onclick="copyShareCard(lastR)">Copy share card</button></div>`);
+
+  lastR = r;
+  results.style.display = "block";
+  setTimeout(() => { animRings(); animBars(); }, 60);
+
+  scanBtn.disabled = false;
+  scanBtn.disabled = ta.value.length < 20;
+}
+
+async function doCondense() {
+  const text = ta.value.trim();
+  if (!text || !backendUrl) return;
+  const btn = document.querySelector(".btn-green");
+  if (btn) { btn.textContent = "Condensing..."; btn.disabled = true; }
+  try {
+    const d = await apiCall("scan/condense", { text: text.slice(0, 5000) });
+    const el = document.getElementById("condenseResult");
+    el.innerHTML = `<div class="condense-box">
+      <div class="condense-label">
+        <span>Condensed version</span>
+        <button class="sample-btn" onclick="navigator.clipboard.writeText(document.getElementById('condensedTxt').textContent)">Copy</button>
+      </div>
+      <div class="condense-text" id="condensedTxt">${escH(d.condensed)}</div>
+      <div class="condense-stats">
+        <span class="condense-stat">-${d.words_cut} words (${d.percent_cut}% cut)</span>
+        <span class="condense-stat">-${d.time_saved}min read time</span>
+        <span class="condense-stat">Slop: ${d.slop_before} → ${d.slop_after}</span>
+      </div>
+    </div>`;
+  } catch(e) {
+    document.getElementById("condenseResult").innerHTML = `<div class="err-box" style="display:block">Condense failed: ${e.message}</div>`;
+  }
+  if (btn) { btn.textContent = "Remove fluff"; btn.disabled = false; }
+}
+</script>
+</body>
+</html>

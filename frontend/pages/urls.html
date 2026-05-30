@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>URL Ranker — SlopLens</title>
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="backend-bar">
+    <label for="bbInput">&#9881; Backend:</label>
+    <input id="bbInput" type="text" placeholder="http://localhost:8000" onchange="setBackend()" onblur="setBackend()">
+    <button class="bb-btn" onclick="useLocalhost()">Use localhost</button>
+    <button class="bb-btn primary" onclick="testBackend()">Connect &#9654;</button>
+    <span id="bbStatus">Not connected</span>
+  </div>
+  <nav>
+    <a href="/" class="nav-brand">SlopLens</a>
+    <div class="nav-links">
+      <a href="/pages/analyzer.html">Analyzer</a>
+      <a href="/pages/compare.html">Compare</a>
+      <a href="/pages/repo.html">Repo</a>
+      <a href="/pages/urls.html">URLs</a>
+      <a href="/pages/badge.html">Badge</a>
+      <a href="/pages/extension.html">Extension</a>
+      <a href="/pages/cli.html">CLI</a>
+      <a href="/pages/api.html">API</a>
+    </div>
+    <span class="nav-track">SLOP SCAN 2026</span>
+  </nav>
+
+<div class="page">
+  <div class="page-header">
+    <div class="page-tag">URL Ranker</div>
+    <h2 class="page-title">Rank any <em>websites.</em></h2>
+    <p class="page-sub">Paste up to 5 URLs. SlopLens fetches and ranks them by slop score. Requires backend.</p>
+  </div>
+
+  <div class="shell">
+    <div class="shell-bar">
+      <div style="display:flex;align-items:center;gap:6px">
+        <div class="shell-dots">
+          <div class="shell-dot" style="background:#EF4444"></div>
+          <div class="shell-dot" style="background:#F59E0B;margin-left:5px"></div>
+          <div class="shell-dot" style="background:#22C55E;margin-left:5px"></div>
+        </div>
+        <span class="shell-title">sloplens://rank-urls</span>
+      </div>
+    </div>
+
+    <div class="quick-row">
+      <span class="quick-lbl">Quick fill:</span>
+      <button class="sample-btn" onclick="quickUrls(0)">Tech blogs</button>
+      <button class="sample-btn" onclick="quickUrls(1)">Docs sites</button>
+      <button class="sample-btn" onclick="quickUrls(2)">News sites</button>
+    </div>
+
+    <div id="urlWarn" class="warn-box" style="display:none;margin:0 16px 0;padding:8px 12px">
+      &#9888; URL ranker requires backend. Click "Connect &#9654;" above.
+    </div>
+
+    <div class="text-in-wrap">
+      <textarea id="urlTa" placeholder="https://example.com/blog-post&#10;https://another.com/article&#10;https://docs.site.com/guide" style="min-height:100px;font-size:12px"></textarea>
+    </div>
+
+    <div class="ctrl-row">
+      <span class="char-ct" id="urlCt">0 URLs</span>
+      <button class="btn btn-primary" id="urlBtn" onclick="doUrls()" disabled>&#9654; Rank sites</button>
+    </div>
+
+    <div style="padding:0 16px"><div class="err-box" id="errBox"></div></div>
+    <div id="urlResults" style="display:none;padding:0 16px 16px"></div>
+  </div>
+</div>
+
+<footer>
+  <span class="footer-brand">SlopLens</span>
+  <span class="footer-meta">URL Ranker</span>
+</footer>
+<script src="/js/common.js"></script>
+<script>
+const URL_SAMPLES = [
+  "https://medium.com/\nhttps://techcrunch.com/\nhttps://dev.to/",
+  "https://docs.python.org/3/\nhttps://fastapi.tiangolo.com/\nhttps://docs.github.com/",
+  "https://cnn.com/\nhttps://bbc.com/\nhttps://theverge.com/",
+];
+const urlTa = document.getElementById("urlTa");
+const urlBtn = document.getElementById("urlBtn");
+const urlCt = document.getElementById("urlCt");
+const urlResults = document.getElementById("urlResults");
+const errBox = document.getElementById("errBox");
+const urlWarn = document.getElementById("urlWarn");
+
+urlTa.addEventListener("input", updateUrlCount);
+function updateUrlCount() {
+  const urls = urlTa.value.trim().split("\n").filter(l => l.trim().length > 4);
+  urlCt.textContent = urls.length + " URL" + (urls.length !== 1 ? "s" : "");
+  urlBtn.disabled = urls.length === 0 || urls.length > 5;
+  urlWarn.style.display = (!backendUrl && urls.length > 0) ? "block" : "none";
+}
+
+function quickUrls(i) {
+  urlTa.value = URL_SAMPLES[i];
+  updateUrlCount();
+  if (backendUrl) doUrls();
+  else urlWarn.style.display = "block";
+}
+
+async function doUrls() {
+  if (!backendUrl) { urlWarn.style.display = "block"; return; }
+  const urls = urlTa.value.trim().split("\n").filter(l => l.trim().length > 4).slice(0, 5);
+  if (!urls.length) return;
+  errBox.style.display = "none"; urlResults.style.display = "none";
+  urlBtn.disabled = true; urlBtn.textContent = "Ranking...";
+  try {
+    const { results } = await apiCall("scan/urls", { urls, fast: true });
+    const rows = results.map((r, i) => {
+      if (r.error) return `<tr><td style="font-family:var(--mono);font-size:11px;color:var(--ink3)">${i+1}</td><td class="rank-url">${escH(r.url)}</td><td colspan="4" style="color:var(--red-d);font-size:12px">${escH(r.error)}</td></tr>`;
+      const t = theme(r.overall_slop_score);
+      return `<tr>
+        <td style="font-family:var(--mono);font-weight:700;color:${t.c}">${i+1}</td>
+        <td class="rank-url">${escH(r.url.replace(/^https?:\/\//, ""))}</td>
+        <td><span style="font-family:var(--mono);font-weight:700;font-size:15px;color:${t.c}">${r.overall_slop_score}</span></td>
+        <td><span style="font-family:var(--mono);font-size:12px;color:${t.c}">${r.fluff_percent}%</span></td>
+        <td style="font-family:var(--mono);font-size:11px;color:var(--ink3)">${r.reading_time_min}min</td>
+        <td><span style="font-family:var(--mono);font-size:10px;padding:2px 7px;border-radius:3px;background:${t.bg};color:${t.c}">${(r.slop_category || "").replace(/_/g, " ")}</span></td>
+      </tr>`;
+    });
+    urlResults.innerHTML = `<table class="rank-table" style="margin-top:8px">
+      <thead><tr><th>#</th><th>URL</th><th>Slop</th><th>Fluff</th><th>Read</th><th>Category</th></tr></thead>
+      <tbody>${rows.join("")}</tbody>
+    </table>`;
+    urlResults.style.display = "block";
+  } catch(e) {
+    errBox.textContent = "Failed: " + e.message;
+    errBox.style.display = "block";
+  }
+  urlBtn.disabled = false; urlBtn.innerHTML = "&#9654; Rank sites";
+}
+</script>
+</body>
+</html>

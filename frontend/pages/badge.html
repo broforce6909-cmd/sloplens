@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Badge & Leaderboard — SlopLens</title>
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="backend-bar">
+    <label for="bbInput">&#9881; Backend:</label>
+    <input id="bbInput" type="text" placeholder="http://localhost:8000" onchange="setBackend()" onblur="setBackend()">
+    <button class="bb-btn" onclick="useLocalhost()">Use localhost</button>
+    <button class="bb-btn primary" onclick="testBackend()">Connect &#9654;</button>
+    <span id="bbStatus">Not connected</span>
+  </div>
+  <nav>
+    <a href="/" class="nav-brand">SlopLens</a>
+    <div class="nav-links">
+      <a href="/pages/analyzer.html">Analyzer</a>
+      <a href="/pages/compare.html">Compare</a>
+      <a href="/pages/repo.html">Repo</a>
+      <a href="/pages/urls.html">URLs</a>
+      <a href="/pages/badge.html">Badge</a>
+      <a href="/pages/extension.html">Extension</a>
+      <a href="/pages/cli.html">CLI</a>
+      <a href="/pages/api.html">API</a>
+    </div>
+    <span class="nav-track">SLOP SCAN 2026</span>
+  </nav>
+
+<div class="page">
+  <div class="page-header">
+    <div class="page-tag">README Badge</div>
+    <h2 class="page-title">Embed your <em>score.</em></h2>
+    <p class="page-sub">After scanning your repo, embed a live SVG badge in your README. Auto-updates on every scan.</p>
+  </div>
+
+  <div class="shell" style="margin-bottom:24px">
+    <div class="shell-bar">
+      <div style="display:flex;align-items:center;gap:6px">
+        <div class="shell-dots">
+          <div class="shell-dot" style="background:#EF4444"></div>
+          <div class="shell-dot" style="background:#F59E0B;margin-left:5px"></div>
+          <div class="shell-dot" style="background:#22C55E;margin-left:5px"></div>
+        </div>
+        <span class="shell-title">sloplens://badge</span>
+      </div>
+    </div>
+    <div class="text-in-wrap">
+      <input type="text" class="line-input" id="badgeRepoIn" placeholder="owner/repo" oninput="updateBadge()">
+    </div>
+    <div id="badgePreview" style="display:none;padding:20px 16px">
+      <div style="font-family:var(--mono);font-size:10px;color:var(--ink3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Preview</div>
+      <img id="badgeImg" src="" alt="SlopLens badge" style="height:20px;margin-bottom:16px">
+      <div style="font-family:var(--mono);font-size:10px;color:var(--ink3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Embed in README.md</div>
+      <div class="embed-code" id="badgeCode"></div>
+      <button class="btn btn-ghost" style="margin-top:10px" id="badgeCopyBtn" onclick="copyBadge()">Copy markdown</button>
+    </div>
+  </div>
+
+  <div class="shell">
+    <div class="shell-bar">
+      <div style="display:flex;align-items:center;gap:6px">
+        <div class="shell-dots">
+          <div class="shell-dot" style="background:#EF4444"></div>
+          <div class="shell-dot" style="background:#F59E0B;margin-left:5px"></div>
+          <div class="shell-dot" style="background:#22C55E;margin-left:5px"></div>
+        </div>
+        <span class="shell-title">sloplens://leaderboard</span>
+      </div>
+      <div class="shell-actions">
+        <button class="sample-btn" onclick="loadLeaderboard()">Refresh</button>
+      </div>
+    </div>
+    <div id="leaderboardResult" style="padding:16px">
+      <div style="font-family:var(--mono);font-size:12px;color:var(--ink3)">Scan repos to populate leaderboard. Top 20 sloppiest repos appear here.</div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <span class="footer-brand">SlopLens</span>
+  <span class="footer-meta">Badge &amp; Leaderboard</span>
+</footer>
+<script src="/js/common.js"></script>
+<script>
+function updateBadge() {
+  const repo = document.getElementById("badgeRepoIn").value.trim().replace(/^https?:\/\/github\.com\//, "").replace(/\.git$/, "");
+  if (!repo || !repo.includes("/")) { document.getElementById("badgePreview").style.display = "none"; return; }
+  const base = backendUrl || "https://your-api.railway.app";
+  const url = `${base}/badge/${repo}.svg`;
+  document.getElementById("badgeImg").src = url;
+  const md = `[![SlopLens](${url})](${window.location.origin})`;
+  document.getElementById("badgeCode").textContent = md;
+  document.getElementById("badgePreview").style.display = "block";
+}
+
+function copyBadge() {
+  navigator.clipboard.writeText(document.getElementById("badgeCode").textContent).then(() => {
+    const btn = document.getElementById("badgeCopyBtn");
+    btn.textContent = "Copied!"; setTimeout(() => btn.textContent = "Copy markdown", 1500);
+  });
+}
+
+async function loadLeaderboard() {
+  if (!backendUrl) { document.getElementById("leaderboardResult").innerHTML = `<div style="font-family:var(--mono);font-size:12px;color:var(--ink3)">Set backend URL to load leaderboard.</div>`; return; }
+  try {
+    const r = await fetch(backendUrl + "/leaderboard");
+    const d = await r.json();
+    if (!d.leaderboard?.length) {
+      document.getElementById("leaderboardResult").innerHTML = `<div style="font-family:var(--mono);font-size:12px;color:var(--ink3)">No repos scanned yet. Scan repos to populate leaderboard.</div>`;
+      return;
+    }
+    const rows = d.leaderboard.map((e, i) => {
+      const t = theme(e.score);
+      return `<tr>
+        <td style="font-family:var(--mono);font-weight:700;color:${t.c}">${i+1}</td>
+        <td style="font-family:var(--mono);font-size:12px;color:var(--amber)">${escH(e.repo)}</td>
+        <td><span style="font-family:var(--mono);font-weight:700;font-size:15px;color:${t.c}">${e.score}</span></td>
+        <td style="font-size:12px;color:var(--ink2)">${escH(e.verdict || "")}</td>
+      </tr>`;
+    });
+    document.getElementById("leaderboardResult").innerHTML = `<table class="rank-table"><thead><tr><th>#</th><th>Repo</th><th>Slop</th><th>Verdict</th></tr></thead><tbody>${rows.join("")}</tbody></table>`;
+  } catch(e) {
+    document.getElementById("leaderboardResult").innerHTML = `<div style="color:var(--red);font-size:12px">Failed: ${e.message}</div>`;
+  }
+}
+
+// Auto-load if backend set
+document.addEventListener("DOMContentLoaded", () => { if (backendUrl) setTimeout(loadLeaderboard, 800); });
+</script>
+</body>
+</html>

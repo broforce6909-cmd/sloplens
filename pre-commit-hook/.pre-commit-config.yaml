@@ -1,0 +1,10 @@
+# Add this to your repo's .pre-commit-config.yaml
+repos:
+  - repo: local
+    hooks:
+      - id: sloplens
+        name: SlopLens slop check
+        entry: python pre-commit-hook/sloplens-check.py
+        language: python
+        types: [markdown, text]
+        pass_filenames: false

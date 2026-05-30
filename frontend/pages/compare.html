@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Compare Mode — SlopLens</title>
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="backend-bar">
+    <label for="bbInput">&#9881; Backend:</label>
+    <input id="bbInput" type="text" placeholder="http://localhost:8000" onchange="setBackend()" onblur="setBackend()">
+    <button class="bb-btn" onclick="useLocalhost()">Use localhost</button>
+    <button class="bb-btn primary" onclick="testBackend()">Connect &#9654;</button>
+    <span id="bbStatus">Not connected</span>
+  </div>
+  <nav>
+    <a href="/" class="nav-brand">SlopLens</a>
+    <div class="nav-links">
+      <a href="/pages/analyzer.html">Analyzer</a>
+      <a href="/pages/compare.html">Compare</a>
+      <a href="/pages/repo.html">Repo</a>
+      <a href="/pages/urls.html">URLs</a>
+      <a href="/pages/badge.html">Badge</a>
+      <a href="/pages/extension.html">Extension</a>
+      <a href="/pages/cli.html">CLI</a>
+      <a href="/pages/api.html">API</a>
+    </div>
+    <span class="nav-track">SLOP SCAN 2026</span>
+  </nav>
+
+<div class="page">
+  <div class="page-header">
+    <div class="page-tag">Compare Mode</div>
+    <h2 class="page-title">Before vs <em>after.</em></h2>
+    <p class="page-sub">Paste two versions of the same text. See slop drop, time saved, and signal gained. Works with or without backend.</p>
+  </div>
+
+  <div class="shell">
+    <div class="shell-bar">
+      <div style="display:flex;align-items:center;gap:6px">
+        <div class="shell-dots">
+          <div class="shell-dot" style="background:#EF4444"></div>
+          <div class="shell-dot" style="background:#F59E0B;margin-left:5px"></div>
+          <div class="shell-dot" style="background:#22C55E;margin-left:5px"></div>
+        </div>
+        <span class="shell-title">sloplens://compare</span>
+      </div>
+      <div class="shell-actions">
+        <button class="sample-btn" onclick="loadCmpSample()">Load example</button>
+        <button class="sample-btn" onclick="clearCmp()">Clear</button>
+      </div>
+    </div>
+
+    <div class="cmp-cols">
+      <div>
+        <div class="cmp-lbl">Before</div>
+        <textarea id="taA" placeholder="Original / before version..." style="min-height:120px"></textarea>
+      </div>
+      <div>
+        <div class="cmp-lbl">After</div>
+        <textarea id="taB" placeholder="Edited / after version..." style="min-height:120px"></textarea>
+      </div>
+    </div>
+
+    <div class="ctrl-row">
+      <span class="char-ct" id="charCt">Paste text in both boxes</span>
+      <button class="btn btn-primary" id="cmpBtn" onclick="doCompare()" disabled>&#9654; Compare</button>
+    </div>
+
+    <div style="padding:0 16px"><div class="err-box" id="errBox"></div></div>
+    <div class="cmp-results" id="cmpResults"></div>
+  </div>
+</div>
+
+<footer>
+  <span class="footer-brand">SlopLens</span>
+  <span class="footer-meta">Compare Mode</span>
+</footer>
+<script src="/js/common.js"></script>
+<script>
+const taA = document.getElementById("taA"), taB = document.getElementById("taB");
+const charCt = document.getElementById("charCt"), cmpBtn = document.getElementById("cmpBtn");
+const cmpResults = document.getElementById("cmpResults"), errBox = document.getElementById("errBox");
+
+[taA, taB].forEach(t => t.addEventListener("input", updateCt));
+function updateCt() {
+  const ok = taA.value.trim().length >= 20 && taB.value.trim().length >= 20;
+  cmpBtn.disabled = !ok;
+  charCt.textContent = ok ? "Ready to compare" : "Both boxes need 20+ chars";
+}
+
+function loadCmpSample() {
+  taA.value = "In today's rapidly evolving digital landscape, it goes without saying that leveraging cutting-edge AI solutions is paramount. Moving forward, our team will synergize cross-functional capabilities to deliver best-in-class experiences. At the end of the day we need to think outside the box.";
+  taB.value = "Fixed auth middleware race condition where concurrent requests read stale tokens before write lock acquired. Reproduced under 50+ concurrent logins. Added Redis SETNX lock 200ms TTL; fallback to DB after 3 retries. Closes #1847.";
+  updateCt();
+}
+function clearCmp() { taA.value = ""; taB.value = ""; updateCt(); cmpResults.className = "cmp-results"; errBox.style.display = "none"; }
+
+async function doCompare() {
+  const a = taA.value.trim(), b = taB.value.trim();
+  errBox.style.display = "none"; cmpResults.className = "cmp-results";
+  cmpBtn.disabled = true; cmpBtn.textContent = "Comparing...";
+
+  let ra, rb, improvement, time_saved = 0, signal_gained = 0;
+  if (backendUrl) {
+    try {
+      const d = await apiCall("scan/compare", { text_a: a, text_b: b, fast: false });
+      ra = d.before; rb = d.after; improvement = d.improvement;
+      time_saved = d.time_saved || 0; signal_gained = d.signal_gained || 0;
+    } catch(e) {
+      ra = jsScore(a); rb = jsScore(b);
+      improvement = ra.overall_slop_score - rb.overall_slop_score;
+      time_saved = Math.max(0, Math.round((ra.reading_time_min - rb.reading_time_min) * 10) / 10);
+      signal_gained = Math.max(0, Math.round((rb.info_time_min - ra.info_time_min) * 10) / 10);
+      errBox.textContent = "Backend failed (" + e.message + ") — showing heuristic results.";
+      errBox.style.display = "block";
+    }
+  } else {
+    ra = jsScore(a); rb = jsScore(b);
+    improvement = ra.overall_slop_score - rb.overall_slop_score;
+    time_saved = Math.max(0, Math.round((ra.reading_time_min - rb.reading_time_min) * 10) / 10);
+    signal_gained = Math.max(0, Math.round((rb.info_time_min - ra.info_time_min) * 10) / 10);
+  }
+
+  const ta2 = theme(ra.overall_slop_score), tb = theme(rb.overall_slop_score);
+  const imp = improvement > 0, dc = imp ? "var(--green)" : "var(--red)";
+
+  cmpResults.innerHTML = `
+    <div>
+      <div class="cmp-lbl">Before</div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+        ${ringHtml(ra.overall_slop_score, ta2)}
+        <span class="vc-pill" style="background:${ta2.bg};color:${ta2.c};border:1px solid ${ta2.b}">${ta2.label}</span>
+        ${ra.reading_time_min != null ? `<div style="font-family:var(--mono);font-size:11px;color:var(--ink3);text-align:center">${ra.reading_time_min}min read &middot; ${ra.fluff_percent}% fluff</div>` : ""}
+        ${ra.roast ? `<div style="font-size:11px;font-style:italic;color:var(--ink3);text-align:center;line-height:1.4">"${escH(ra.roast)}"</div>` : ""}
+      </div>
+    </div>
+    <div class="cr-mid">
+      <div class="cr-delta" style="color:${dc}">${imp ? "-" : "+"}${Math.abs(improvement)}</div>
+      <div class="cr-dlbl" style="color:${dc}">${imp ? "pts better" : "pts worse"}</div>
+      ${time_saved > 0 ? `<div class="savings-bar"><span class="sav-num">${time_saved}min</span><span class="sav-lbl">Time saved</span></div>` : ""}
+      ${signal_gained > 0 ? `<div class="savings-bar" style="margin-top:6px"><span class="sav-num">+${signal_gained}min</span><span class="sav-lbl">Signal gained</span></div>` : ""}
+    </div>
+    <div>
+      <div class="cmp-lbl">After</div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+        ${ringHtml(rb.overall_slop_score, tb)}
+        <span class="vc-pill" style="background:${tb.bg};color:${tb.c};border:1px solid ${tb.b}">${tb.label}</span>
+        ${rb.reading_time_min != null ? `<div style="font-family:var(--mono);font-size:11px;color:var(--ink3);text-align:center">${rb.reading_time_min}min read &middot; ${rb.fluff_percent}% fluff</div>` : ""}
+        ${rb.fix ? `<div style="margin-top:8px;padding:8px;background:var(--green-bg);border:1px solid var(--green-d);border-radius:4px;width:100%"><div style="font-family:var(--mono);font-size:9px;color:var(--green);font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px">Still needs</div><div style="font-size:12px;color:var(--green);line-height:1.5">${escH(rb.fix)}</div></div>` : ""}
+      </div>
+    </div>`;
+
+  cmpResults.className = "cmp-results visible";
+  setTimeout(() => { animRings(); animBars(); }, 60);
+  cmpBtn.disabled = false; cmpBtn.innerHTML = "&#9654; Compare";
+}
+</script>
+</body>
+</html>

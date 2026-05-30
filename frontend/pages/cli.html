@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CLI Guide — SlopLens</title>
+<link rel="stylesheet" href="/css/style.css">
+<style>
+.guide-section{margin-bottom:36px;}
+.guide-section h3{font-family:var(--serif);font-size:20px;font-weight:400;color:var(--ink);margin-bottom:12px;letter-spacing:-.3px;}
+.guide-section p{font-size:14px;color:var(--ink2);line-height:1.7;margin-bottom:10px;}
+.code-block{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:14px 16px;font-family:var(--mono);font-size:13px;color:var(--amber);line-height:1.7;margin-bottom:12px;overflow-x:auto;white-space:pre;}
+.step-card{display:flex;gap:16px;align-items:flex-start;padding:16px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:10px;}
+.step-num{width:32px;height:32px;flex-shrink:0;border:2px solid var(--amber-d);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:13px;font-weight:700;color:var(--amber);}
+.step-content h4{font-size:14px;font-weight:600;color:var(--ink);margin-bottom:4px;}
+.step-content p{font-size:13px;color:var(--ink2);line-height:1.5;margin:0;}
+.cmd-row{display:flex;gap:0;margin-bottom:12px;border:1px solid var(--border);border-radius:6px;overflow:hidden;}
+.cmd-label{background:var(--surface2);padding:10px 14px;font-family:var(--mono);font-size:11px;color:var(--amber);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;border-right:1px solid var(--border);display:flex;align-items:center;min-width:120px;}
+.cmd-code{background:var(--bg);padding:10px 14px;font-family:var(--mono);font-size:12px;color:var(--ink);flex:1;overflow-x:auto;white-space:nowrap;}
+.badge-green{display:inline-block;font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:3px;background:var(--green-bg);color:var(--green);border:1px solid var(--green-d);margin-left:8px;text-transform:uppercase;letter-spacing:.04em;vertical-align:middle;}
+.badge-amber{display:inline-block;font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:3px;background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-d);margin-left:8px;text-transform:uppercase;letter-spacing:.04em;vertical-align:middle;}
+.endpoint-card{border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:12px;}
+.endpoint-header{display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--surface2);border-bottom:1px solid var(--border);}
+.method-badge{font-family:var(--mono);font-size:11px;padding:3px 10px;border-radius:3px;font-weight:700;}
+.endpoint-path{font-family:var(--mono);font-size:13px;color:var(--amber);}
+.endpoint-desc{font-size:12px;color:var(--ink2);margin-left:auto;}
+.endpoint-body{padding:14px 16px;}
+.endpoint-body p{font-size:13px;color:var(--ink2);margin-bottom:8px;}
+</style>
+</head>
+<body>
+  <div class="backend-bar">
+    <label for="bbInput">&#9881; Backend:</label>
+    <input id="bbInput" type="text" placeholder="http://localhost:8000" onchange="setBackend()" onblur="setBackend()">
+    <button class="bb-btn" onclick="useLocalhost()">Use localhost</button>
+    <button class="bb-btn primary" onclick="testBackend()">Connect &#9654;</button>
+    <span id="bbStatus">Not connected</span>
+  </div>
+  <nav>
+    <a href="/" class="nav-brand">SlopLens</a>
+    <div class="nav-links">
+      <a href="/pages/analyzer.html">Analyzer</a>
+      <a href="/pages/compare.html">Compare</a>
+      <a href="/pages/repo.html">Repo</a>
+      <a href="/pages/urls.html">URLs</a>
+      <a href="/pages/badge.html">Badge</a>
+      <a href="/pages/extension.html">Extension</a>
+      <a href="/pages/cli.html">CLI</a>
+      <a href="/pages/api.html">API</a>
+    </div>
+    <span class="nav-track">SLOP SCAN 2026</span>
+  </nav>
+
+<div class="page">
+  <div class="page-header">
+    <div class="page-tag">CLI</div>
+    <h2 class="page-title">Terminal <em>power.</em></h2>
+    <p class="page-sub">8 commands. Rich output. Pipe support. CI threshold mode. Works anywhere Python runs.</p>
+  </div>
+
+  <div class="guide-section">
+    <h3>Install</h3>
+    <div class="code-block"># Activate venv first
+venv\Scripts\activate        # Windows
+source venv/bin/activate      # Mac/Linux
+
+# Install CLI
+pip install -e .
+
+# Verify
+sloplens --version
+sloplens doctor</div>
+    <p>After install, set backend URL once:</p>
+    <div class="code-block">sloplens config --backend http://localhost:8000</div>
+  </div>
+
+  <div class="guide-section">
+    <h3>scan — Score any text</h3>
+    <p>Scan text directly, from a file, or from a URL.</p>
+    <div class="cmd-row"><div class="cmd-label">Text</div><div class="cmd-code">sloplens scan "Moving forward we will leverage synergies"</div></div>
+    <div class="cmd-row"><div class="cmd-label">File</div><div class="cmd-code">sloplens scan --file README.md</div></div>
+    <div class="cmd-row"><div class="cmd-label">URL</div><div class="cmd-code">sloplens scan --url https://example.com/blog-post</div></div>
+    <div class="cmd-row"><div class="cmd-label">CI Mode</div><div class="cmd-code">sloplens scan --file README.md --threshold 60</div></div>
+    <div class="cmd-row"><div class="cmd-label">Pipe</div><div class="cmd-code">cat README.md | sloplens scan</div></div>
+    <div class="cmd-row"><div class="cmd-label">JSON</div><div class="cmd-code">sloplens scan --file docs.md --json</div></div>
+    <p style="font-size:13px;color:var(--ink3)">&#9432; CI mode exits with code 1 if slop score &gt; threshold — use in GitHub Actions or pre-push hooks.</p>
+  </div>
+
+  <div class="guide-section">
+    <h3>repo — Scan a GitHub repo</h3>
+    <p>Scans README, last 20 PRs, and last 30 commits in parallel.</p>
+    <div class="cmd-row"><div class="cmd-label">By name</div><div class="cmd-code">sloplens repo microsoft/vscode</div></div>
+    <div class="cmd-row"><div class="cmd-label">By URL</div><div class="cmd-code">sloplens repo https://github.com/torvalds/linux</div></div>
+    <div class="cmd-row"><div class="cmd-label">JSON</div><div class="cmd-code">sloplens repo openai/openai-python --json</div></div>
+  </div>
+
+  <div class="guide-section">
+    <h3>compare — Before vs after</h3>
+    <p>Compare two files. Shows score delta, time saved, signal gained.</p>
+    <div class="cmd-row"><div class="cmd-label">Compare</div><div class="cmd-code">sloplens compare before.md after.md</div></div>
+    <div class="cmd-row"><div class="cmd-label">JSON</div><div class="cmd-code">sloplens compare v1.txt v2.txt --json</div></div>
+  </div>
+
+  <div class="guide-section">
+    <h3>condense — Remove fluff</h3>
+    <p>Rewrites text using LLM, removing all slop.</p>
+    <div class="cmd-row"><div class="cmd-label">Text</div><div class="cmd-code">sloplens condense "In today's fast-paced world..."</div></div>
+    <div class="cmd-row"><div class="cmd-label">File</div><div class="cmd-code">sloplens condense --file bloated.md</div></div>
+    <div class="cmd-row"><div class="cmd-label">Save</div><div class="cmd-code">sloplens condense --file bloated.md --output clean.md</div></div>
+    <div class="cmd-row"><div class="cmd-label">Pipe</div><div class="cmd-code">cat bloated.md | sloplens condense</div></div>
+  </div>
+
+  <div class="guide-section">
+    <h3>batch — Rank multiple files</h3>
+    <p>Scans multiple files and ranks by slop score.</p>
+    <div class="cmd-row"><div class="cmd-label">All MD</div><div class="cmd-code">sloplens batch docs/*.md</div></div>
+    <div class="cmd-row"><div class="cmd-label">Threshold</div><div class="cmd-code">sloplens batch *.txt --threshold 70</div></div>
+    <p style="font-size:13px;color:var(--ink3)">&#9432; With --threshold, exits code 1 if any file exceeds it — good for CI batch checks.</p>
+  </div>
+
+  <div class="guide-section">
+    <h3>init — Setup repo</h3>
+    <p>One command installs pre-commit hook and GitHub Action in current repo.</p>
+    <div class="cmd-row"><div class="cmd-label">Setup</div><div class="cmd-code">sloplens init</div></div>
+    <div class="cmd-row"><div class="cmd-label">Threshold</div><div class="cmd-code">sloplens init --threshold 65</div></div>
+  </div>
+
+  <div class="guide-section">
+    <h3>config — Settings</h3>
+    <div class="cmd-row"><div class="cmd-label">Set URL</div><div class="cmd-code">sloplens config --backend http://localhost:8000</div></div>
+    <div class="cmd-row"><div class="cmd-label">Show</div><div class="cmd-code">sloplens config --show</div></div>
+    <div class="cmd-row"><div class="cmd-label">Reset</div><div class="cmd-code">sloplens config --reset</div></div>
+  </div>
+
+  <div class="guide-section">
+    <h3>doctor — Health check</h3>
+    <p>Checks backend connection and API key status.</p>
+    <div class="cmd-row"><div class="cmd-label">Check</div><div class="cmd-code">sloplens doctor</div></div>
+    <div class="code-block">🔍 SlopLens Doctor
+
+  Backend: http://localhost:8000
+  ✓ Backend online — SlopLens API v4.0.0 · 3 layers · 0 cached
+  ✓ GROQ_API_KEY set</div>
+  </div>
+
+  <div class="guide-section">
+    <h3>Use in CI Pipeline</h3>
+    <div class="code-block"># .github/workflows/slop-check.yml
+- name: Check docs for slop
+  run: |
+    pip install -e .
+    sloplens config --backend ${{ "{{" }} secrets.SLOPLENS_URL }}
+    sloplens batch docs/*.md --threshold 70</div>
+  </div>
+</div>
+
+<footer>
+  <span class="footer-brand">SlopLens</span>
+  <span class="footer-meta">CLI Guide</span>
+</footer>
+<script src="/js/common.js"></script>
+
+</body>
+</html>

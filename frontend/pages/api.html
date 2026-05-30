@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>API Reference — SlopLens</title>
+<link rel="stylesheet" href="/css/style.css">
+<style>
+.guide-section{margin-bottom:36px;}
+.guide-section h3{font-family:var(--serif);font-size:20px;font-weight:400;color:var(--ink);margin-bottom:12px;letter-spacing:-.3px;}
+.guide-section p{font-size:14px;color:var(--ink2);line-height:1.7;margin-bottom:10px;}
+.code-block{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:14px 16px;font-family:var(--mono);font-size:13px;color:var(--amber);line-height:1.7;margin-bottom:12px;overflow-x:auto;white-space:pre;}
+.step-card{display:flex;gap:16px;align-items:flex-start;padding:16px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:10px;}
+.step-num{width:32px;height:32px;flex-shrink:0;border:2px solid var(--amber-d);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:13px;font-weight:700;color:var(--amber);}
+.step-content h4{font-size:14px;font-weight:600;color:var(--ink);margin-bottom:4px;}
+.step-content p{font-size:13px;color:var(--ink2);line-height:1.5;margin:0;}
+.cmd-row{display:flex;gap:0;margin-bottom:12px;border:1px solid var(--border);border-radius:6px;overflow:hidden;}
+.cmd-label{background:var(--surface2);padding:10px 14px;font-family:var(--mono);font-size:11px;color:var(--amber);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;border-right:1px solid var(--border);display:flex;align-items:center;min-width:120px;}
+.cmd-code{background:var(--bg);padding:10px 14px;font-family:var(--mono);font-size:12px;color:var(--ink);flex:1;overflow-x:auto;white-space:nowrap;}
+.badge-green{display:inline-block;font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:3px;background:var(--green-bg);color:var(--green);border:1px solid var(--green-d);margin-left:8px;text-transform:uppercase;letter-spacing:.04em;vertical-align:middle;}
+.badge-amber{display:inline-block;font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:3px;background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-d);margin-left:8px;text-transform:uppercase;letter-spacing:.04em;vertical-align:middle;}
+.endpoint-card{border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:12px;}
+.endpoint-header{display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--surface2);border-bottom:1px solid var(--border);}
+.method-badge{font-family:var(--mono);font-size:11px;padding:3px 10px;border-radius:3px;font-weight:700;}
+.endpoint-path{font-family:var(--mono);font-size:13px;color:var(--amber);}
+.endpoint-desc{font-size:12px;color:var(--ink2);margin-left:auto;}
+.endpoint-body{padding:14px 16px;}
+.endpoint-body p{font-size:13px;color:var(--ink2);margin-bottom:8px;}
+</style>
+</head>
+<body>
+  <div class="backend-bar">
+    <label for="bbInput">&#9881; Backend:</label>
+    <input id="bbInput" type="text" placeholder="http://localhost:8000" onchange="setBackend()" onblur="setBackend()">
+    <button class="bb-btn" onclick="useLocalhost()">Use localhost</button>
+    <button class="bb-btn primary" onclick="testBackend()">Connect &#9654;</button>
+    <span id="bbStatus">Not connected</span>
+  </div>
+  <nav>
+    <a href="/" class="nav-brand">SlopLens</a>
+    <div class="nav-links">
+      <a href="/pages/analyzer.html">Analyzer</a>
+      <a href="/pages/compare.html">Compare</a>
+      <a href="/pages/repo.html">Repo</a>
+      <a href="/pages/urls.html">URLs</a>
+      <a href="/pages/badge.html">Badge</a>
+      <a href="/pages/extension.html">Extension</a>
+      <a href="/pages/cli.html">CLI</a>
+      <a href="/pages/api.html">API</a>
+    </div>
+    <span class="nav-track">SLOP SCAN 2026</span>
+  </nav>
+
+<div class="page">
+  <div class="page-header">
+    <div class="page-tag">API Reference</div>
+    <h2 class="page-title">All <em>endpoints.</em></h2>
+    <p class="page-sub">REST API with 10 endpoints. Full Swagger UI at <a href="/docs" style="color:var(--amber);font-family:var(--mono)">/docs</a>. Try any endpoint directly from the browser.</p>
+  </div>
+
+  <div class="guide-section">
+    <h3>Swagger UI (Interactive Docs)</h3>
+    <p>FastAPI auto-generates interactive documentation. Try any endpoint directly in the browser — no Postman needed.</p>
+    <div class="step-card">
+      <div class="step-num">1</div>
+      <div class="step-content"><h4>Open Swagger UI</h4><p>Go to <a href="/docs" style="color:var(--amber);font-family:var(--mono)">http://localhost:8000/docs</a></p></div>
+    </div>
+    <div class="step-card">
+      <div class="step-num">2</div>
+      <div class="step-content"><h4>Click any endpoint</h4><p>Expand it. Click <strong>Try it out</strong> button.</p></div>
+    </div>
+    <div class="step-card">
+      <div class="step-num">3</div>
+      <div class="step-content"><h4>Enter request body</h4><p>Fill in the JSON fields. Click <strong>Execute</strong>.</p></div>
+    </div>
+    <div class="step-card">
+      <div class="step-num">4</div>
+      <div class="step-content"><h4>See response</h4><p>Response appears below — status code, headers, and full JSON.</p></div>
+    </div>
+  </div>
+
+  <div class="guide-section">
+    <h3>Base URL</h3>
+    <div class="code-block">Local:    http://localhost:8000
+Deployed: https://your-app.railway.app</div>
+  </div>
+
+  <div class="guide-section">
+    <h3>Endpoints</h3>
+
+    <div class="endpoint-card">
+      <div class="endpoint-header">
+        <span class="method-badge" style="background:#1a3a1a;color:#22c55e">POST</span>
+        <span class="endpoint-path">/scan</span>
+        <span class="endpoint-desc">Full 3-layer hybrid scan</span>
+      </div>
+      <div class="endpoint-body">
+        <p>Scores text using all three layers: heuristic + sentence-transformers + Groq LLM.</p>
+        <div class="code-block">// Request
+{
+  "text": "In today's fast-paced world...",
+  "fast": false   // true = faster, slightly less accurate
+}
+
+// Response
+{
+  "overall_slop_score": 78,
+  "information_density": 22,
+  "filler_ratio": 85,
+  "specificity": 18,
+  "naturalness": 30,
+  "reading_time_min": 2.1,
+  "info_time_min": 0.4,
+  "fluff_percent": 79,
+  "roast": "80 words saying absolutely nothing.",
+  "verdict": "Pure jargon dressed as strategy.",
+  "flagged_phrases": ["moving forward", "best-in-class"],
+  "fix": "Replace vague phrases with specific actions.",
+  "confidence_interval": 6,
+  "slop_category": "corporate_buzzwords"
+}</div>
+      </div>
+    </div>
+
+    <div class="endpoint-card">
+      <div class="endpoint-header">
+        <span class="method-badge" style="background:#1a3a1a;color:#22c55e">POST</span>
+        <span class="endpoint-path">/scan/compare</span>
+        <span class="endpoint-desc">Compare two texts</span>
+      </div>
+      <div class="endpoint-body">
+        <p>Scores both texts in parallel. Returns improvement delta, time saved, signal gained.</p>
+        <div class="code-block">// Request
+{
+  "text_a": "Before version...",
+  "text_b": "After version...",
+  "fast": false
+}
+
+// Response
+{
+  "before": { ...full scan result... },
+  "after":  { ...full scan result... },
+  "improvement": 47,
+  "time_saved": 1.8,
+  "signal_gained": 0.9,
+  "summary": "Slop cut by 47 pts · 1.8min saved"
+}</div>
+      </div>
+    </div>
+
+    <div class="endpoint-card">
+      <div class="endpoint-header">
+        <span class="method-badge" style="background:#1a3a1a;color:#22c55e">POST</span>
+        <span class="endpoint-path">/scan/repo</span>
+        <span class="endpoint-desc">Scan a GitHub repo</span>
+      </div>
+      <div class="endpoint-body">
+        <p>Scans README + last 20 PRs + last 30 commits in parallel. No token needed for public repos.</p>
+        <div class="code-block">// Request
+{
+  "repo": "microsoft/vscode",
+  "fast": true
+}
+
+// Response
+{
+  "repo": "microsoft/vscode",
+  "overall_slop_score": 34,
+  "sections": [
+    { "section": "README", "slop_score": 28, "word_count": 1240 },
+    { "section": "PR Descriptions", "slop_score": 41, "pr_count": 20,
+      "score_distribution": { "clean": 12, "medium": 6, "slop": 2 } },
+    { "section": "Commit Messages", "slop_score": 33, "commit_count": 30 }
+  ],
+  "cleanest_section": "README",
+  "sloppiest_section": "PR Descriptions"
+}</div>
+      </div>
+    </div>
+
+    <div class="endpoint-card">
+      <div class="endpoint-header">
+        <span class="method-badge" style="background:#1a3a1a;color:#22c55e">POST</span>
+        <span class="endpoint-path">/scan/condense</span>
+        <span class="endpoint-desc">Rewrite text removing slop</span>
+      </div>
+      <div class="endpoint-body">
+        <p>Uses Groq LLM to rewrite text, cutting all filler, buzzwords, and passive voice.</p>
+        <div class="code-block">// Request
+{ "text": "In today's fast-paced world..." }
+
+// Response
+{
+  "original": "...",
+  "condensed": "...",
+  "words_before": 120,
+  "words_after": 48,
+  "words_cut": 72,
+  "percent_cut": 60,
+  "slop_before": 81,
+  "slop_after": 22,
+  "time_saved": 0.3
+}</div>
+      </div>
+    </div>
+
+    <div class="endpoint-card">
+      <div class="endpoint-header">
+        <span class="method-badge" style="background:#1a3a1a;color:#22c55e">POST</span>
+        <span class="endpoint-path">/scan/urls</span>
+        <span class="endpoint-desc">Fetch and rank URLs</span>
+      </div>
+      <div class="endpoint-body">
+        <div class="code-block">// Request
+{ "urls": ["https://example.com/blog", "https://docs.site.com"], "fast": true }
+
+// Response
+{ "results": [ { "url": "...", "overall_slop_score": 72, "fluff_percent": 68 }, ... ] }</div>
+      </div>
+    </div>
+
+    <div class="endpoint-card">
+      <div class="endpoint-header">
+        <span class="method-badge" style="background:#1a3a1a;color:#22c55e">POST</span>
+        <span class="endpoint-path">/scan/heuristic</span>
+        <span class="endpoint-desc">Free instant scan (no LLM)</span>
+        <span class="badge-green">Free</span>
+      </div>
+      <div class="endpoint-body">
+        <p>Heuristic + semantic layers only. No Groq API call. Instant response. Good for high-volume use.</p>
+        <div class="code-block">{ "text": "your text here" }</div>
+      </div>
+    </div>
+
+    <div class="endpoint-card">
+      <div class="endpoint-header">
+        <span class="method-badge" style="background:#1a3a1a;color:#22c55e">POST</span>
+        <span class="endpoint-path">/scan/batch</span>
+        <span class="endpoint-desc">Batch scan up to 10 texts</span>
+      </div>
+      <div class="endpoint-body">
+        <div class="code-block">{ "texts": ["text1", "text2", "text3"], "fast": true }</div>
+      </div>
+    </div>
+
+    <div class="endpoint-card">
+      <div class="endpoint-header">
+        <span class="method-badge" style="background:#1a2a3a;color:#60a5fa">GET</span>
+        <span class="endpoint-path">/badge/{owner}/{repo}.svg</span>
+        <span class="endpoint-desc">Live SVG badge</span>
+      </div>
+      <div class="endpoint-body">
+        <p>Returns SVG badge. Embed in README:</p>
+        <div class="code-block">[![SlopLens](https://your-api.railway.app/badge/owner/repo.svg)](https://sloplens.dev)</div>
+      </div>
+    </div>
+
+    <div class="endpoint-card">
+      <div class="endpoint-header">
+        <span class="method-badge" style="background:#1a2a3a;color:#60a5fa">GET</span>
+        <span class="endpoint-path">/leaderboard</span>
+        <span class="endpoint-desc">Top 20 sloppiest repos</span>
+      </div>
+      <div class="endpoint-body">
+        <p>Returns top 20 repos by slop score. Updated on every /scan/repo call.</p>
+      </div>
+    </div>
+
+    <div class="endpoint-card">
+      <div class="endpoint-header">
+        <span class="method-badge" style="background:#1a2a3a;color:#60a5fa">GET</span>
+        <span class="endpoint-path">/health</span>
+        <span class="endpoint-desc">Status check</span>
+      </div>
+      <div class="endpoint-body">
+        <div class="code-block">{
+  "status": "ok",
+  "service": "SlopLens API",
+  "version": "4.0.0",
+  "llm_provider": "groq (free)",
+  "layers": 3,
+  "cache_entries": 42,
+  "github_token": "set (5000 req/hr)",
+  "semantic_model": "sentence-transformers/all-MiniLM-L6-v2"
+}</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="guide-section">
+    <h3>Try it live</h3>
+    <p>Open Swagger UI and test any endpoint directly:</p>
+    <a href="/docs" style="display:inline-block;padding:12px 24px;background:var(--amber);color:#000;border-radius:4px;font-family:var(--mono);font-size:13px;font-weight:700;text-decoration:none;letter-spacing:.06em;text-transform:uppercase">Open Swagger UI &#8599;</a>
+  </div>
+</div>
+
+<footer>
+  <span class="footer-brand">SlopLens</span>
+  <span class="footer-meta">API Reference</span>
+</footer>
+<script src="/js/common.js"></script>
+
+</body>
+</html>

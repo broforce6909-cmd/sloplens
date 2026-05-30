@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Repo Scanner — SlopLens</title>
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="backend-bar">
+    <label for="bbInput">&#9881; Backend:</label>
+    <input id="bbInput" type="text" placeholder="http://localhost:8000" onchange="setBackend()" onblur="setBackend()">
+    <button class="bb-btn" onclick="useLocalhost()">Use localhost</button>
+    <button class="bb-btn primary" onclick="testBackend()">Connect &#9654;</button>
+    <span id="bbStatus">Not connected</span>
+  </div>
+  <nav>
+    <a href="/" class="nav-brand">SlopLens</a>
+    <div class="nav-links">
+      <a href="/pages/analyzer.html">Analyzer</a>
+      <a href="/pages/compare.html">Compare</a>
+      <a href="/pages/repo.html">Repo</a>
+      <a href="/pages/urls.html">URLs</a>
+      <a href="/pages/badge.html">Badge</a>
+      <a href="/pages/extension.html">Extension</a>
+      <a href="/pages/cli.html">CLI</a>
+      <a href="/pages/api.html">API</a>
+    </div>
+    <span class="nav-track">SLOP SCAN 2026</span>
+  </nav>
+
+<div class="page">
+  <div class="page-header">
+    <div class="page-tag">Repo Scanner</div>
+    <h2 class="page-title">Score any <em>GitHub repo.</em></h2>
+    <p class="page-sub">Scans README, last 20 PR descriptions, and last 30 commit messages in parallel. Returns per-section breakdown. Requires backend.</p>
+  </div>
+
+  <div class="shell">
+    <div class="shell-bar">
+      <div style="display:flex;align-items:center;gap:6px">
+        <div class="shell-dots">
+          <div class="shell-dot" style="background:#EF4444"></div>
+          <div class="shell-dot" style="background:#F59E0B;margin-left:5px"></div>
+          <div class="shell-dot" style="background:#22C55E;margin-left:5px"></div>
+        </div>
+        <span class="shell-title">sloplens://scan-repo</span>
+      </div>
+    </div>
+
+    <div class="quick-row">
+      <span class="quick-lbl">Quick scan:</span>
+      <button class="sample-btn" onclick="quickRepo('microsoft/vscode')">microsoft/vscode</button>
+      <button class="sample-btn" onclick="quickRepo('torvalds/linux')">torvalds/linux</button>
+      <button class="sample-btn" onclick="quickRepo('openai/openai-python')">openai/openai-python</button>
+      <button class="sample-btn" onclick="quickRepo('facebook/react')">facebook/react</button>
+    </div>
+
+    <div class="text-in-wrap">
+      <input type="text" class="line-input" id="repoIn"
+        placeholder="github.com/owner/repo  or  owner/repo"
+        oninput="updateRepoBtn()" onkeydown="if(event.key==='Enter') doRepo()">
+    </div>
+
+    <div id="repoWarn" class="warn-box" style="margin:0 16px 0;padding:8px 12px">
+      &#9888; Repo scanner requires backend. Click "Connect &#9654;" above.
+    </div>
+
+    <div class="ctrl-row">
+      <span class="char-ct" id="repoCt">Enter a repo or click quick scan above</span>
+      <button class="btn btn-primary" id="repoBtn" onclick="doRepo()" disabled>&#9654; Scan repo</button>
+    </div>
+
+    <div style="padding:0 16px"><div class="err-box" id="errBox"></div></div>
+    <div class="results" id="repoResults" style="padding:20px 16px"></div>
+  </div>
+</div>
+
+<footer>
+  <span class="footer-brand">SlopLens</span>
+  <span class="footer-meta">Repo Scanner</span>
+</footer>
+<script src="/js/common.js"></script>
+<script>
+const repoIn = document.getElementById("repoIn");
+const repoBtn = document.getElementById("repoBtn");
+const repoCt = document.getElementById("repoCt");
+const repoResults = document.getElementById("repoResults");
+const errBox = document.getElementById("errBox");
+const repoWarn = document.getElementById("repoWarn");
+
+function updateRepoBtn() {
+  const v = repoIn.value.trim();
+  repoBtn.disabled = v.length < 3;
+  repoCt.textContent = v.length < 3 ? "Enter a repo or click quick scan above" : "Ready to scan";
+  repoWarn.style.display = (!backendUrl && v.length >= 3) ? "block" : "none";
+}
+
+function quickRepo(repo) {
+  repoIn.value = repo;
+  updateRepoBtn();
+  if (backendUrl) doRepo();
+  else repoWarn.style.display = "block";
+}
+
+async function doRepo() {
+  const repo = repoIn.value.trim();
+  if (!repo || !backendUrl) {
+    repoWarn.style.display = "block";
+    return;
+  }
+  errBox.style.display = "none";
+  repoResults.style.display = "none";
+  repoBtn.disabled = true; repoBtn.textContent = "Scanning...";
+
+  try {
+    const r = await apiCall("scan/repo", { repo, fast: true });
+    const t = theme(r.overall_slop_score);
+
+    const sectionCards = (r.sections || []).map(sec => {
+      const st = theme(sec.slop_score);
+      let extra = "";
+      if (sec.score_distribution) {
+        const d = sec.score_distribution;
+        extra += `<div class="repo-dist">
+          <div class="repo-dist-item" style="background:var(--green-bg);border:1px solid var(--green-d)"><span class="repo-dist-num" style="color:var(--green)">${d.clean}</span><span class="repo-dist-lbl" style="color:var(--green)">Clean</span></div>
+          <div class="repo-dist-item" style="background:var(--amber-bg);border:1px solid var(--amber-d)"><span class="repo-dist-num" style="color:var(--amber)">${d.medium}</span><span class="repo-dist-lbl" style="color:var(--amber)">Medium</span></div>
+          <div class="repo-dist-item" style="background:var(--red-bg);border:1px solid var(--red-d)"><span class="repo-dist-num" style="color:var(--red)">${d.slop}</span><span class="repo-dist-lbl" style="color:var(--red)">Slop</span></div>
+        </div>`;
+      }
+      const worst = sec.worst_sample || sec.worst_message;
+      if (worst) extra += `<div class="repo-worst">"${escH(worst.slice(0, 200))}"</div>`;
+      if (sec.flagged_phrases?.length) extra += `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:8px">${sec.flagged_phrases.map(p => `<span class="flag-chip">${escH(p)}</span>`).join("")}</div>`;
+      const count = sec.pr_count ? sec.pr_count + " PRs" : sec.commit_count ? sec.commit_count + " commits" : sec.word_count ? sec.word_count + " words" : "";
+      return `<div class="repo-section-card">
+        <div class="repo-section-title">${escH(sec.section)}${count ? ` <span style="opacity:.5">— ${count}</span>` : ""}</div>
+        <div style="display:flex;align-items:baseline;gap:8px">
+          <span class="repo-score-big" style="color:${st.c}">${sec.slop_score}</span>
+          <span style="font-family:var(--mono);font-size:12px;color:${st.c}">${st.label}</span>
+        </div>${extra}
+      </div>`;
+    }).join("");
+
+    repoResults.innerHTML = `
+      <div class="repo-overview">
+        ${ringHtml(r.overall_slop_score, t, 120)}
+        <div>
+          <div style="font-family:var(--serif);font-size:20px;color:var(--ink);margin-bottom:4px;letter-spacing:-.5px">${escH(r.repo)}</div>
+          ${r.description ? `<div style="font-size:13px;color:var(--ink2);margin-bottom:8px">${escH(r.description)}</div>` : ""}
+          <div style="font-family:var(--mono);font-size:11px;color:var(--ink3)">&#9733; ${(r.star_count || 0).toLocaleString()} stars</div>
+          ${r.cleanest_section ? `<div style="font-family:var(--mono);font-size:11px;color:var(--green);margin-top:6px">Cleanest: ${escH(r.cleanest_section)}</div>` : ""}
+          ${r.sloppiest_section ? `<div style="font-family:var(--mono);font-size:11px;color:var(--red)">Sloppiest: ${escH(r.sloppiest_section)}</div>` : ""}
+        </div>
+      </div>
+      ${r.verdict ? `<div class="verdict-q">"${escH(r.verdict)}"</div>` : ""}
+      ${sectionCards}`;
+
+    repoResults.style.display = "block";
+    setTimeout(animRings, 60);
+  } catch(e) {
+    errBox.textContent = "Scan failed: " + e.message;
+    errBox.style.display = "block";
+  }
+  repoBtn.disabled = false; repoBtn.innerHTML = "&#9654; Scan repo";
+}
+</script>
+</body>
+</html>

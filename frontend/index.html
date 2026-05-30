@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SlopLens — See Through the Slop</title>
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="backend-bar">
+    <label for="bbInput">&#9881; Backend:</label>
+    <input id="bbInput" type="text" placeholder="http://localhost:8000" onchange="setBackend()" onblur="setBackend()">
+    <button class="bb-btn" onclick="useLocalhost()">Use localhost</button>
+    <button class="bb-btn primary" onclick="testBackend()">Connect &#9654;</button>
+    <span id="bbStatus">Not connected</span>
+  </div>
+  <nav>
+    <a href="/" class="nav-brand">SlopLens</a>
+    <div class="nav-links">
+      <a href="/pages/analyzer.html">Analyzer</a>
+      <a href="/pages/compare.html">Compare</a>
+      <a href="/pages/repo.html">Repo</a>
+      <a href="/pages/urls.html">URLs</a>
+      <a href="/pages/badge.html">Badge</a>
+      <a href="/pages/extension.html">Extension</a>
+      <a href="/pages/cli.html">CLI</a>
+      <a href="/pages/api.html">API</a>
+    </div>
+    <span class="nav-track">SLOP SCAN 2026</span>
+  </nav>
+
+<div class="hero">
+  <div>
+    <div class="eyebrow">Three-layer hybrid detection engine</div>
+    <h1>The slop<br>stops <em>here.</em></h1>
+    <p class="hero-sub">SlopLens scores any text for information density, filler, and naturalness. Browser extension. Heatmap. Reading time vs signal. Free to run.</p>
+    <div class="cta-row">
+      <a href="/pages/analyzer.html" class="cta-btn cta-primary">Analyze text</a>
+      <a href="/pages/repo.html" class="cta-btn cta-ghost">Scan a repo</a>
+    </div>
+  </div>
+  <div style="display:flex;flex-direction:column;align-items:center;gap:10px">
+    <canvas id="heroRing" width="160" height="160"></canvas>
+    <div style="font-family:var(--mono);font-size:10px;color:var(--ink3);text-align:center">3-layer scoring<br>Heuristic + Semantic + LLM</div>
+  </div>
+</div>
+
+<div class="ticker-outer">
+  <div class="ticker-track">
+    <span class="ti">Works without backend</span><span class="ti">sentence-transformers</span>
+    <span class="ti">Heatmap overlay</span><span class="ti">Reading time vs signal</span>
+    <span class="ti">Compare mode</span><span class="ti">Repo scanner</span>
+    <span class="ti">URL ranker</span><span class="ti">Roast generator</span>
+    <span class="ti">CLI 8 commands</span><span class="ti">Pre-commit hook</span>
+    <span class="ti">Works without backend</span><span class="ti">sentence-transformers</span>
+    <span class="ti">Heatmap overlay</span><span class="ti">Reading time vs signal</span>
+    <span class="ti">Compare mode</span><span class="ti">Repo scanner</span>
+    <span class="ti">URL ranker</span><span class="ti">Roast generator</span>
+    <span class="ti">CLI 8 commands</span><span class="ti">Pre-commit hook</span>
+  </div>
+</div>
+
+<div style="max-width:900px;margin:0 auto;padding:48px 24px">
+  <div class="feature-grid">
+    <div class="feat-card">
+      <div class="feat-icon">&#128269;</div>
+      <div class="feat-title">Text Analyzer</div>
+      <p class="feat-desc">Paste any text. Score, reading time, roast, fix. Works in browser without backend.</p>
+      <a href="/pages/analyzer.html" class="feat-link">Open analyzer &rarr;</a>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">&#9654;&#9664;</div>
+      <div class="feat-title">Compare Mode</div>
+      <p class="feat-desc">Before vs after. See slop drop, time saved, signal gained.</p>
+      <a href="/pages/compare.html" class="feat-link">Open compare &rarr;</a>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">&#128196;</div>
+      <div class="feat-title">Repo Scanner</div>
+      <p class="feat-desc">Scan any GitHub repo. README + last 20 PRs + last 30 commits.</p>
+      <a href="/pages/repo.html" class="feat-link">Open scanner &rarr;</a>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">&#127760;</div>
+      <div class="feat-title">URL Ranker</div>
+      <p class="feat-desc">Paste up to 5 URLs. Fetches and ranks by slop score.</p>
+      <a href="/pages/urls.html" class="feat-link">Open ranker &rarr;</a>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">&#127959;</div>
+      <div class="feat-title">README Badge</div>
+      <p class="feat-desc">Live SVG badge for your README. Auto-updates on every scan.</p>
+      <a href="/pages/badge.html" class="feat-link">Get badge &rarr;</a>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">&#128142;</div>
+      <div class="feat-title">Chrome Extension</div>
+      <p class="feat-desc">Badge on every page. Auto-scan. Heatmap overlay. Green/yellow/red on sentences.</p>
+      <a href="/pages/extension.html" class="feat-link">Install guide &rarr;</a>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">&#9881;</div>
+      <div class="feat-title">CLI</div>
+      <p class="feat-desc">8 commands. Scan files, repos, URLs. Compare, condense, batch. CI threshold mode.</p>
+      <a href="/pages/cli.html" class="feat-link">CLI guide &rarr;</a>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">&#128203;</div>
+      <div class="feat-title">API Reference</div>
+      <p class="feat-desc">10 endpoints. Full Swagger UI. Try any endpoint directly in browser.</p>
+      <a href="/pages/api.html" class="feat-link">API docs &rarr;</a>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">&#128640;</div>
+      <div class="feat-title">Deploy Free</div>
+      <p class="feat-desc">One command Railway deploy. Groq free tier. No credit card. No expiry.</p>
+      <a href="/docs" class="feat-link">API docs &rarr;</a>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <span class="footer-brand">SlopLens v4</span>
+  <span class="footer-meta">SLOP SCAN 2026 &middot; UX + Detection + Track A + CI/CD &middot; Free (Groq)</span>
+</footer>
+
+<script src="/js/common.js"></script>
+<script>
+(function(){
+  const c=document.getElementById("heroRing");
+  if(!c)return;
+  const x=c.getContext("2d"),cx=80,cy=80,r=60;let cur=0;
+  function draw(v){
+    x.clearRect(0,0,160,160);
+    x.beginPath();x.arc(cx,cy,r,0,Math.PI*2);x.strokeStyle="#2C2A26";x.lineWidth=8;x.stroke();
+    x.beginPath();x.arc(cx,cy,r,-Math.PI/2,-Math.PI/2+(v/100)*Math.PI*2);
+    x.strokeStyle="#F59E0B";x.lineWidth=8;x.lineCap="round";x.stroke();
+    x.fillStyle="#F59E0B";x.font="bold 28px 'Courier New'";x.textAlign="center";x.textBaseline="middle";
+    x.fillText(Math.round(v),cx,cy-8);
+    x.fillStyle="#5C5A55";x.font="10px 'Courier New'";x.fillText("slop",cx,cy+14);
+  }
+  function step(){if(cur<73){cur=Math.min(cur+1.4,73);draw(cur);requestAnimationFrame(step);}else draw(73);}
+  setTimeout(step,600);
+})();
+</script>
+</body>
+</html>

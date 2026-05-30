@@ -1,0 +1,19 @@
+<!-- Shared nav snippet — included via JS -->
+<div class="backend-bar">
+  <label for="bbInput">⚙ Backend:</label>
+  <input id="bbInput" type="text" placeholder="http://localhost:8000" onchange="setBackend()" onblur="setBackend()">
+  <button class="bb-btn" onclick="useLocalhost()">Use localhost</button>
+  <button class="bb-btn primary" onclick="testBackend()">Connect ▶</button>
+  <span id="bbStatus">Not connected</span>
+</div>
+<nav>
+  <a href="/index.html" class="nav-brand">SlopLens</a>
+  <div class="nav-links">
+    <a href="/pages/analyzer.html">Analyzer</a>
+    <a href="/pages/compare.html">Compare</a>
+    <a href="/pages/repo.html">Repo</a>
+    <a href="/pages/urls.html">URLs</a>
+    <a href="/pages/badge.html">Badge</a>
+  </div>
+  <span class="nav-track">SLOP SCAN 2026</span>
+</nav>

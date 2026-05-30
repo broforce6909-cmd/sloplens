@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Extension Install — SlopLens</title>
+<link rel="stylesheet" href="/css/style.css">
+<style>
+.guide-section{margin-bottom:36px;}
+.guide-section h3{font-family:var(--serif);font-size:20px;font-weight:400;color:var(--ink);margin-bottom:12px;letter-spacing:-.3px;}
+.guide-section p{font-size:14px;color:var(--ink2);line-height:1.7;margin-bottom:10px;}
+.code-block{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:14px 16px;font-family:var(--mono);font-size:13px;color:var(--amber);line-height:1.7;margin-bottom:12px;overflow-x:auto;white-space:pre;}
+.step-card{display:flex;gap:16px;align-items:flex-start;padding:16px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:10px;}
+.step-num{width:32px;height:32px;flex-shrink:0;border:2px solid var(--amber-d);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:13px;font-weight:700;color:var(--amber);}
+.step-content h4{font-size:14px;font-weight:600;color:var(--ink);margin-bottom:4px;}
+.step-content p{font-size:13px;color:var(--ink2);line-height:1.5;margin:0;}
+.cmd-row{display:flex;gap:0;margin-bottom:12px;border:1px solid var(--border);border-radius:6px;overflow:hidden;}
+.cmd-label{background:var(--surface2);padding:10px 14px;font-family:var(--mono);font-size:11px;color:var(--amber);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;border-right:1px solid var(--border);display:flex;align-items:center;min-width:120px;}
+.cmd-code{background:var(--bg);padding:10px 14px;font-family:var(--mono);font-size:12px;color:var(--ink);flex:1;overflow-x:auto;white-space:nowrap;}
+.badge-green{display:inline-block;font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:3px;background:var(--green-bg);color:var(--green);border:1px solid var(--green-d);margin-left:8px;text-transform:uppercase;letter-spacing:.04em;vertical-align:middle;}
+.badge-amber{display:inline-block;font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:3px;background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-d);margin-left:8px;text-transform:uppercase;letter-spacing:.04em;vertical-align:middle;}
+.endpoint-card{border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:12px;}
+.endpoint-header{display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--surface2);border-bottom:1px solid var(--border);}
+.method-badge{font-family:var(--mono);font-size:11px;padding:3px 10px;border-radius:3px;font-weight:700;}
+.endpoint-path{font-family:var(--mono);font-size:13px;color:var(--amber);}
+.endpoint-desc{font-size:12px;color:var(--ink2);margin-left:auto;}
+.endpoint-body{padding:14px 16px;}
+.endpoint-body p{font-size:13px;color:var(--ink2);margin-bottom:8px;}
+</style>
+</head>
+<body>
+  <div class="backend-bar">
+    <label for="bbInput">&#9881; Backend:</label>
+    <input id="bbInput" type="text" placeholder="http://localhost:8000" onchange="setBackend()" onblur="setBackend()">
+    <button class="bb-btn" onclick="useLocalhost()">Use localhost</button>
+    <button class="bb-btn primary" onclick="testBackend()">Connect &#9654;</button>
+    <span id="bbStatus">Not connected</span>
+  </div>
+  <nav>
+    <a href="/" class="nav-brand">SlopLens</a>
+    <div class="nav-links">
+      <a href="/pages/analyzer.html">Analyzer</a>
+      <a href="/pages/compare.html">Compare</a>
+      <a href="/pages/repo.html">Repo</a>
+      <a href="/pages/urls.html">URLs</a>
+      <a href="/pages/badge.html">Badge</a>
+      <a href="/pages/extension.html">Extension</a>
+      <a href="/pages/cli.html">CLI</a>
+      <a href="/pages/api.html">API</a>
+    </div>
+    <span class="nav-track">SLOP SCAN 2026</span>
+  </nav>
+
+<div class="page">
+  <div class="page-header">
+    <div class="page-tag">Chrome Extension</div>
+    <h2 class="page-title">Install <em>SlopLens.</em></h2>
+    <p class="page-sub">Score any webpage instantly. Heatmap overlay. Auto-scan. Works on every site.</p>
+  </div>
+
+  <div class="guide-section">
+    <h3>Step 1 — Set Backend URL</h3>
+    <p>Open <code style="font-family:var(--mono);color:var(--amber)">extension/config.js</code> in your project folder and set your backend URL:</p>
+    <div class="code-block">// extension/config.js
+const SLOPLENS_BACKEND = "http://localhost:8000";
+// After Railway deploy:
+// const SLOPLENS_BACKEND = "https://your-app.railway.app";</div>
+    <p style="color:var(--amber);font-size:13px">&#9888; Backend must be running first: <code style="font-family:var(--mono)">python run.py</code></p>
+  </div>
+
+  <div class="guide-section">
+    <h3>Step 2 — Load in Chrome</h3>
+    <div class="step-card">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <h4>Open Extensions page</h4>
+        <p>Type <strong style="font-family:var(--mono);color:var(--amber)">chrome://extensions</strong> in Chrome address bar and press Enter.</p>
+      </div>
+    </div>
+    <div class="step-card">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <h4>Enable Developer Mode</h4>
+        <p>Toggle the <strong>Developer Mode</strong> switch in the top-right corner of the extensions page. It must be ON (blue).</p>
+      </div>
+    </div>
+    <div class="step-card">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <h4>Load Unpacked</h4>
+        <p>Click the <strong>Load unpacked</strong> button that appears. Navigate to your project folder and select the <strong style="font-family:var(--mono);color:var(--amber)">extension/</strong> folder. Click OK.</p>
+      </div>
+    </div>
+    <div class="step-card">
+      <div class="step-num">4</div>
+      <div class="step-content">
+        <h4>SlopLens appears</h4>
+        <p>SlopLens will appear in your extensions list with its icon. It is now active on all websites.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="guide-section">
+    <h3>Step 3 — Using the Extension</h3>
+    <div class="step-card">
+      <div class="step-num">&#128269;</div>
+      <div class="step-content">
+        <h4>Badge on every page</h4>
+        <p>Visit any webpage. A SlopLens badge appears in the <strong>bottom-right corner</strong>. Click it to scan the page.</p>
+      </div>
+    </div>
+    <div class="step-card">
+      <div class="step-num">&#128202;</div>
+      <div class="step-content">
+        <h4>Detail panel</h4>
+        <p>After scanning, click the score badge again. A panel opens showing score, reading time vs useful time, roast, flagged phrases, and fix.</p>
+      </div>
+    </div>
+    <div class="step-card">
+      <div class="step-num">&#127775;</div>
+      <div class="step-content">
+        <h4>Heatmap overlay</h4>
+        <p>Inside the panel, click <strong>Show Heatmap</strong>. Green/yellow/red backgrounds appear on page elements — green = useful, yellow = filler, red = slop.</p>
+      </div>
+    </div>
+    <div class="step-card">
+      <div class="step-num">&#9881;</div>
+      <div class="step-content">
+        <h4>Auto-scan (optional)</h4>
+        <p>Click the SlopLens extension icon in Chrome toolbar → toggle <strong>Auto-scan on page load</strong>. Every page you visit gets scored automatically.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="guide-section">
+    <h3>Troubleshooting</h3>
+    <div class="shell">
+      <div class="shell-bar"><div style="display:flex;align-items:center;gap:6px"><div class="shell-dots"><div class="shell-dot" style="background:#EF4444"></div><div class="shell-dot" style="background:#F59E0B;margin-left:5px"></div><div class="shell-dot" style="background:#22C55E;margin-left:5px"></div></div><span class="shell-title">Common issues</span></div></div>
+      <div style="padding:16px;display:flex;flex-direction:column;gap:12px">
+        <div style="border-left:3px solid var(--red-d);padding-left:12px">
+          <div style="font-size:13px;font-weight:600;color:var(--ink);margin-bottom:4px">Badge not showing</div>
+          <div style="font-size:13px;color:var(--ink2)">Reload the extension: <code style="font-family:var(--mono);color:var(--amber)">chrome://extensions</code> → SlopLens → &#8635; Reload button</div>
+        </div>
+        <div style="border-left:3px solid var(--amber-d);padding-left:12px">
+          <div style="font-size:13px;font-weight:600;color:var(--ink);margin-bottom:4px">Error — retry</div>
+          <div style="font-size:13px;color:var(--ink2)">Backend not running. Open terminal and run: <code style="font-family:var(--mono);color:var(--amber)">python run.py</code></div>
+        </div>
+        <div style="border-left:3px solid var(--amber-d);padding-left:12px">
+          <div style="font-size:13px;font-weight:600;color:var(--ink);margin-bottom:4px">Heatmap not working</div>
+          <div style="font-size:13px;color:var(--ink2)">Try on Wikipedia: <code style="font-family:var(--mono);color:var(--amber)">en.wikipedia.org</code> — some sites block background changes via CSP.</div>
+        </div>
+        <div style="border-left:3px solid var(--green-d);padding-left:12px">
+          <div style="font-size:13px;font-weight:600;color:var(--ink);margin-bottom:4px">After Railway deploy</div>
+          <div style="font-size:13px;color:var(--ink2)">Update <code style="font-family:var(--mono);color:var(--amber)">extension/config.js</code> with Railway URL, then reload extension.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <span class="footer-brand">SlopLens</span>
+  <span class="footer-meta">Extension Guide</span>
+</footer>
+<script src="/js/common.js"></script>
+
+</body>
+</html>
